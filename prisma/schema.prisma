@@ -36,6 +36,7 @@ model User {
   password           String
   role               Role           @default(USER)
   emailVerified      Boolean        @default(false)
+  termsAccepted      Boolean        @default(false) // Added this field
   organizations      Organization[] @relation("UserOrganizations") // Many-to-many relationship with Organization
   ownedOrganizations Organization[] @relation("OwnerOrganizations") // Organizations owned by this user
   createdAt          DateTime       @default(now())

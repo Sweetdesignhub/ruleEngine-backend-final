@@ -21,11 +21,11 @@ import bcrypt from "bcrypt";
 
 //register user
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role } = req.body;
+  const { name, email, password, confirmPassword, role, termsAccepted } = req.body;
 
   try {
     // 1. Validate input fields
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || termsAccepted === undefined) {
       return res.status(400).json({
         success: false,
         error: "All fields are required.",
@@ -68,6 +68,7 @@ export const registerUser = async (req, res) => {
         email,
         password: hashedPassword,
         role: role || "USER", // Default role is USER
+        termsAccepted,
       },
     });
 
@@ -122,7 +123,7 @@ export const registerUser = async (req, res) => {
 
 // send email verification mail to users
 export const verifyEmail = async (req, res) => {
-  const { token } = req.body;
+  const { token } = req.query;
 
   if (!token) {
     return res.status(400).json({
@@ -176,16 +177,26 @@ export const signIn = async (req, res) => {
       password
     );
 
-    res.cookie("refreshToken", refreshToken, {
+    const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "strict",
-    });
+    }
 
-    return res
-      .status(200)
-      .json({ success: true, accessToken, message: "Sign-in successful" });
+    res.cookie("refreshToken", refreshToken, options);
+    res.cookie("accessToken", accessToken, options);
+
+    return res.status(200).json({
+      success: true,
+      accessToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      message: "Sign-in successful",
+    });
   } catch (error) {
     return res.status(401).json({ success: false, error: error.message });
   }

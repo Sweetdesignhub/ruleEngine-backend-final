@@ -13,12 +13,12 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 587,             
-  secure: false,     
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
-    user: "9295dc5e4a527c", 
-    pass: "a4ed70cdc72ca2",
+    user: "itnanda1987@gmail.com",
+    pass: "jdlt yozr luhj qqzo",
   },
 });
 
@@ -26,10 +26,10 @@ const transporter = nodemailer.createTransport({
 export const sendVerificationEmail = async (email, emailHTML) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER, 
-      to: email,                    
-      subject: "Email Verification", 
-      html: emailHTML,  
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Email Verification",
+      html: emailHTML,
     };
 
     const result = await transporter.sendMail(mailOptions);
