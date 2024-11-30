@@ -10,48 +10,49 @@
  * - Update description: Brief description of what was updated or fixed
  */
 
-const { Pool } = require('pg');
+import pkg from 'pg';
+const { Pool } = pkg;
 
 async function fetchDatabaseDetails(pool) {
-    try {
-      const client = await pool.connect();
-      // Get list of tables
-      const tablesRes = await client.query(`
+  try {
+    const client = await pool.connect();
+    // Get list of tables
+    const tablesRes = await client.query(`
         SELECT table_name 
         FROM information_schema.tables 
         WHERE table_schema = 'public'
       `);
-  
-      const tables = tablesRes.rows.map((row) => row.table_name);
-      const columns = {};
-  
-      // Get columns for each table
-      for (const table of tables) {
-        const columnsRes = await client.query(
-          `
+
+    const tables = tablesRes.rows.map((row) => row.table_name);
+    const columns = {};
+
+    // Get columns for each table
+    for (const table of tables) {
+      const columnsRes = await client.query(
+        `
           SELECT column_name, is_nullable, data_type 
           FROM information_schema.columns 
           WHERE table_name = $1
         `,
-          [table]
-        );
-  
-        columns[table] = columnsRes.rows.map((row) => ({
-          column_name: row.column_name,
-          is_nullable: row.is_nullable === "YES",
-          data_type: row.data_type,
-        }));
-      }
-  
-      client.release();
-      return { tables, columns };
-    } catch (error) {
-      console.error("Error fetching database details:", error);
-      throw new Error("Failed to fetch database details");
-    } finally {
-      pool.end();
+        [table]
+      );
+
+      columns[table] = columnsRes.rows.map((row) => ({
+        column_name: row.column_name,
+        is_nullable: row.is_nullable === "YES",
+        data_type: row.data_type,
+      }));
     }
+
+    client.release();
+    return { tables, columns };
+  } catch (error) {
+    console.error("Error fetching database details:", error);
+    throw new Error("Failed to fetch database details");
+  } finally {
+    pool.end();
   }
+}
 
 // Function to fetch table data
 async function getTableData(req, res) {
@@ -132,10 +133,5 @@ async function joinTableData(req, res) {
 }
 
 // Export all controller functions
-module.exports = {
-  getTableData,
-  getDatabaseDetails,
-  insertTableData,
-  joinTableData,
-  editRuleManagement,
-};
+export { getTableData, getDatabaseDetails, insertTableData, joinTableData };
+

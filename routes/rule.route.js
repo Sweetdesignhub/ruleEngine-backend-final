@@ -12,23 +12,31 @@
 
 import { Router } from "express";
 import {
-    getAllRuleByOrgId,
-    createRuleByOrgId,
-    editRuleById,
-    deleteRuleById,
-    saveRuleById,
-    getRuleById
-  } from "../controllers/rule.controller.js";
+  getAllRuleByOrgId,
+  createRuleByOrgId,
+  editRuleById,
+  deleteRuleById,
+  saveRuleById,
+  getRuleById
+} from "../controllers/rule.controller.js";
+
+import {
+  getTableData,
+  getDatabaseDetails,
+  insertTableData,
+  joinTableData
+} from "../controllers/database.controller.js";
+
 
 const router = Router();
 
 
-router.get("/rule/get/:orgId",getAllRuleByOrgId);
-router.post("/rule/create/:orgId",createRuleByOrgId);
-router.put("/rule/edit/:orgId/:id",editRuleById);
-router.delete("/rule/delete/:orgId/:id",deleteRuleById);
-router.post("/rule/save",saveRuleById);
-router.get("/rule/:id",getRuleById);
+router.get("/rule/get/:orgId", getAllRuleByOrgId);
+router.post("/rule/create/:orgId", createRuleByOrgId);
+router.put("/rule/edit/:orgId/:id", editRuleById);
+router.delete("/rule/delete/:orgId/:id", deleteRuleById);
+router.post("/rule/save", saveRuleById);
+router.get("/rule/:id", getRuleById);
 
 router.post('/database/get/table/data', getTableData);
 router.post('/database/get/details', getDatabaseDetails);

@@ -18,6 +18,24 @@ enum Role {
   ADMIN
 }
 
+model Rule {
+  id             Int          @id @default(autoincrement())
+  name           String
+  description    String
+  data           Json
+  flowInput      Json?
+  secret         String
+  status         String       @default("ACTIVE")
+  ruleType       String
+  activationDate DateTime     @default(now())
+  category       String
+  versions       String       @default("1.0")
+  OrganizationId Int
+  organization   Organization @relation("OrganizationRules", fields: [OrganizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
 model Organization {
   id          Int      @id @default(autoincrement())
   name        String
@@ -27,6 +45,7 @@ model Organization {
   members     User[]   @relation("UserOrganizations")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  rules       Rule[]   @relation("OrganizationRules") // This should match the name used in Rule model
 }
 
 model User {

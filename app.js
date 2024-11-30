@@ -17,6 +17,7 @@ import morgan from "morgan";
 
 //routes
 import authRoutes from "./routes/auth.route.js";
+import ruleRoutes from "./routes/rule.route.js";
 
 dotenv.config();
 
@@ -33,5 +34,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/rules", ruleRoutes);
 
 export { app };
