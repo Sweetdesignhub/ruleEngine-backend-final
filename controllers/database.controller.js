@@ -57,11 +57,17 @@ async function fetchDatabaseDetails(pool) {
 // Function to fetch table data
 async function getTableData(req, res) {
   const { dbConfig, table, columns } = req.body;
-  const pool = new Pool(dbConfig);
+
+  const {username,host,database,password,port} = dbConfig;
+
+//   console.log("--> ",req.body);
+  const pool = new Pool({ user: username, host, database, password, port });
 
   try {
     const cols = columns && columns.length ? columns.join(", ") : "*";
     const query = `SELECT ${cols} FROM ${table};`;
+
+    console.log("-->",pool);
     const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (error) {
@@ -88,7 +94,10 @@ async function getDatabaseDetails(req, res) {
 // Function to insert data into a table
 async function insertTableData(req, res) {
   const { dbConfig, table, columnData } = req.body;
-  const pool = new Pool(dbConfig);
+  const {username,host,database,password,port} = dbConfig;
+
+//   console.log("--> ",req.body);
+  const pool = new Pool({ user: username, host, database, password, port });
 
   try {
     const cols = Object.keys(columnData).join(", ");
@@ -108,7 +117,10 @@ async function insertTableData(req, res) {
 async function joinTableData(req, res) {
   const { dbConfig, data } = req.body;
   const { joinType, primaryTable, tables, primaryColumn, columns } = data;
-  const pool = new Pool(dbConfig);
+  const {username,host,database,password,port} = dbConfig;
+
+//   console.log("--> ",req.body);
+  const pool = new Pool({ user: username, host, database, password, port });
 
   try {
     const secondaryTable = tables.find((table) => table !== primaryTable);
