@@ -7,7 +7,7 @@
  *
  * Updated by: [Name] 
  * Updated on: [Update date]
- * - Update description: Brief description of what was updated or fixed
+ * - Update description: Configured CORS to allow requests from the deployed frontend URL
  */
 
 import express from "express";
@@ -25,7 +25,25 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
+// Configure CORS
+const allowedOrigins = [
+  "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com"
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow cookies or other credentials
+  })
+);
+
 app.use(morgan("dev"));
 
 // Default route
