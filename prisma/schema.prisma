@@ -29,12 +29,25 @@ model Rule {
   ruleType       String
   activationDate DateTime     @default(now())
   category       String
-  versions       String       @default("1.0")
   OrganizationId Int
   organization   Organization @relation("OrganizationRules", fields: [OrganizationId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  versions       Version[]    @relation("RuleVersions") // One-to-many relationship with Version
 }
+
+
+model Version {
+  id        Int      @id @default(autoincrement())
+  versionName String  @default("1.0")  // Updated column name
+  data      Json                         // Added new column
+  flowInput Json?                        // Added new column
+  ruleId    Int
+  rule      Rule     @relation("RuleVersions", fields: [ruleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 
 model Teams {
   id             Int          @id @default(autoincrement())

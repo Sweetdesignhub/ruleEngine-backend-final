@@ -228,24 +228,26 @@ export const getAllRuleByOrgId = asyncHandler(async (req, res) => {
 });
 
 export const createRuleByOrgId = asyncHandler(async (req, res) => {
-  const orgId = req.params.orgId;
+  const orgId = parseInt(req.params.orgId);
   const rule = req.body;
 
-  // Check if the OrganizationId exists
+  console.log("check the rule.data",rule);
+
+  // Check if the Organization exists
   const organization = await prisma.organization.findUnique({
-    where: {
-      id: parseInt(orgId),
-    },
+    where: { id: orgId },
   });
 
   if (!organization) {
     throw new ApiError(400, "Organization not found");
   }
 
+  // Validate required fields
   if (!rule.name || !rule.description || !rule.data || !rule.category || !rule.ruleType) {
     throw new ApiError(400, "Please provide all required fields");
   }
 
+  // Valid categories and rule types
   const validCategories = ["hr", "logistics", "security", "finance", "operations"];
   const validRuleTypes = ["SHORT_RULE", "LONG_RULE"];
 
@@ -261,29 +263,28 @@ export const createRuleByOrgId = asyncHandler(async (req, res) => {
   const existingRule = await prisma.rule.findFirst({
     where: {
       name: rule.name,
-      OrganizationId: parseInt(orgId)
-    }
+      OrganizationId: orgId,
+    },
   });
 
   if (existingRule) {
     throw new ApiError(400, "Rule with this name already exists for this organization");
   }
 
-  // Create the new rule in the database
+  // Create the new rule
   const newRule = await prisma.rule.create({
     data: {
       name: rule.name,
       description: rule.description,
       data: rule.data,
-      flowInput: rule.flowInput || null,
+      flowInput: rule.flowInputField || null,
       secret: Math.random().toString(36).substring(2, 15),
       status: "ACTIVE",
       ruleType: rule.ruleType,
       activationDate: new Date(),
       category: rule.category,
-      versions: rule.versions || "1.0",
-      OrganizationId: parseInt(orgId)
-    }
+      OrganizationId: orgId,
+    },
   });
 
   res.status(201).json(new ApiResponse(201, newRule, "Rule created successfully"));
@@ -338,27 +339,40 @@ export const editRuleById = asyncHandler(async (req, res) => {
 export const deleteRuleById = asyncHandler(async (req, res) => {
   const { orgId, id } = req.params;
 
-  // Fetch the existing rule from the database
+  // Fetch the existing rule from the database, including its versions
   const existingRule = await prisma.rule.findFirst({
     where: {
       id: parseInt(id),
-      OrganizationId: parseInt(orgId)
-    }
+      OrganizationId: parseInt(orgId),
+    },
+    include: {
+      versions: true, // Include the versions
+    },
   });
 
   if (!existingRule) {
     throw new ApiError(404, "Rule not found");
   }
 
-  // Delete the rule from the database
+  // Delete all versions associated with the rule
+  if (existingRule.versions && existingRule.versions.length > 0) {
+    await prisma.version.deleteMany({
+      where: {
+        ruleId: parseInt(id), // Delete versions associated with this rule
+      },
+    });
+  }
+
+  // Delete the rule after its versions have been removed
   await prisma.rule.delete({
     where: {
-      id: parseInt(id)
-    }
+      id: parseInt(id),
+    },
   });
 
-  res.status(200).json(new ApiResponse(200, {}, "Rule deleted successfully"));
+  res.status(200).json(new ApiResponse(200, {}, "Rule and associated versions deleted successfully"));
 });
+
 
 export const saveRuleById = asyncHandler(async (req, res) => {
   const { id, rule } = req.body;
@@ -407,4 +421,159 @@ export const getRuleById = asyncHandler(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, rule, "Rule retrieved successfully"));
+});
+
+//Version
+
+export const createVersionByRuleId = asyncHandler(async (req, res) => {
+  const ruleId = parseInt(req.params.ruleId);
+  console.log("-->",ruleId );
+  const { versionName, updatedRule } = req.body;
+
+  // Validate rule existence
+  const existingRule = await prisma.rule.findUnique({
+    where: { id: ruleId },
+  });
+
+  if (!existingRule) {
+    throw new ApiError(400, "Rule not found");
+  }
+
+  // Validate request body
+  if (!versionName || !updatedRule) {
+    throw new ApiError(400, "Please provide both version name and data");
+  }
+
+  // Check if version already exists for this rule
+  const existingVersion = await prisma.version.findFirst({
+    where: {
+      ruleId: ruleId,
+      versionName: versionName,
+    },
+  });
+
+  if (existingVersion) {
+    throw new ApiError(400, "Version with this name already exists for this rule");
+  }
+
+  if (!updatedRule.flowData) {
+    throw new ApiError(400, "Please provide all required fields");
+  }
+
+  await prisma.rule.update({
+    where: {
+      id: ruleId
+    },
+    data: {
+      data: updatedRule.flowData,
+      flowInput: updatedRule.flowInput || null
+    }
+  });
+
+  // Create new version
+  const newVersion = await prisma.version.create({
+    data: {
+      versionName: versionName,
+      data: updatedRule.flowData,
+      flowInput: updatedRule.flowInputField || null,
+      rule: { connect: { id: ruleId } },
+    },
+  });
+
+  res.status(201).json(new ApiResponse(201, newVersion, "Version created successfully"));
+});
+
+
+export const updateVersionByVersionId = asyncHandler(async (req, res) => {
+  const versionId = parseInt(req.params.versionId);
+  const { updatedRule } = req.body;
+
+  // Find the existing version
+  const existingVersion = await prisma.version.findUnique({
+    where: { id: versionId },
+    include: { rule: true }, // Include related rule data
+  });
+
+  if (!existingVersion) {
+    throw new ApiError(404, "Version not found");
+  }
+
+  console.log("existingVersion : ", existingVersion.data);
+
+  // Find the latest version for the rule
+  const latestVersion = await prisma.version.findFirst({
+    where: { ruleId: existingVersion.ruleId },
+    orderBy: { createdAt: 'desc' }, // Get the latest version by createdAt
+  });
+
+  // Update the version
+  const updatedVersion = await prisma.version.update({
+    where: { id: versionId },
+    data: {
+      versionName: existingVersion.versionName,
+      data: updatedRule.flowData,
+      flowInput: updatedRule.flowInputField,
+    },
+  });
+
+  // If the current version is the latest, update the associated rule
+  if (latestVersion.id === versionId) {
+
+    console.log("Editing the Latest version");
+    await prisma.rule.update({
+      where: { id: existingVersion.ruleId },
+      data: {
+        data: updatedRule.flowData,
+        flowInput: updatedVersion.flowInputField,
+      },
+    });
+  }
+
+  res.status(200).json(new ApiResponse(200, updatedVersion, "Version updated successfully"));
+});
+
+
+export const getAllVersionByRuleId = asyncHandler(async (req, res) => {
+  const ruleId = parseInt(req.params.ruleId);
+
+  // Validate rule existence
+  const existingRule = await prisma.rule.findUnique({
+    where: { id: ruleId },
+  });
+
+  if (!existingRule) {
+    throw new ApiError(404, "Rule not found");
+  }
+
+  // Fetch all versions for the rule
+  const versions = await prisma.version.findMany({
+    where: { ruleId: ruleId },
+  });
+
+  res.status(200).json(new ApiResponse(200, versions, "Versions retrieved successfully"));
+});
+
+export const deleteVersionById = asyncHandler(async (req, res) => {
+  const versionId = parseInt(req.params.id);
+
+  // Validate input
+  if (isNaN(versionId)) {
+    throw new ApiError(400, "Invalid version ID");
+  }
+
+  // Find the version to ensure it exists
+  const existingVersion = await prisma.version.findUnique({
+    where: { id: versionId },
+  });
+
+  if (!existingVersion) {
+    throw new ApiError(404, "Version not found");
+  }
+
+  // Delete the version
+  await prisma.version.delete({
+    where: { id: versionId },
+  });
+
+  res.status(200).json(new ApiResponse(200, null, "Version deleted successfully"));
 });

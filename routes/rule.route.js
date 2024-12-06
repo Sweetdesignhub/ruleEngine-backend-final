@@ -17,7 +17,11 @@ import {
   editRuleById,
   deleteRuleById,
   saveRuleById,
-  getRuleById
+  getRuleById,
+  createVersionByRuleId,
+  updateVersionByVersionId,
+  getAllVersionByRuleId,
+  deleteVersionById
 } from "../controllers/rule.controller.js";
 
 import {
@@ -37,6 +41,11 @@ router.put("/rule/edit/:orgId/:id", editRuleById);
 router.delete("/rule/delete/:orgId/:id", deleteRuleById);
 router.post("/rule/save", saveRuleById);
 router.get("/rule/:id", getRuleById);
+//Version
+router.post("/rule/version/create/:ruleId", createVersionByRuleId);
+router.post("/rule/version/update/:versionId", updateVersionByVersionId);
+router.get("/rule/version/:ruleId", getAllVersionByRuleId);
+router.delete("/rule/version/:id", deleteVersionById);
 
 router.post('/database/get/table/data', getTableData);
 router.post('/database/get/details', getDatabaseDetails);
