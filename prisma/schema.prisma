@@ -36,6 +36,7 @@ model Rule {
   versions       Version[]    @relation("RuleVersions") // One-to-many relationship with Version
 }
 
+
 model Version {
   id        Int      @id @default(autoincrement())
   versionName String  @default("1.0")  // Updated column name
@@ -48,16 +49,34 @@ model Version {
 }
 
 
+model Teams {
+  id             Int          @id @default(autoincrement())
+  name           String
+  description    String
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  users          User[]       @relation("TeamUsers") // Many-to-many relationship
+  ownerId        Int
+  owner          User         @relation("OwnedTeams", fields: [ownerId], references: [id]) // One-to-one relationship
+  deletedAt      DateTime? // New field to track deletion time
+  isDeleted      Boolean      @default(false) // Flag for soft delete
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
 model Organization {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   description String
   ownerId     Int
-  owner       User     @relation("OwnerOrganizations", fields: [ownerId], references: [id])
-  members     User[]   @relation("UserOrganizations")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  rules       Rule[]   @relation("OrganizationRules") // This should match the name used in Rule model
+  owner       User      @relation("OwnerOrganizations", fields: [ownerId], references: [id])
+  users       User[]    @relation("UserOrganizations")
+  teams       Teams[]
+  isDeleted   Boolean   @default(false) // Soft delete flag
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  rules       Rule[]    @relation("OrganizationRules")
 }
 
 model User {
@@ -67,9 +86,11 @@ model User {
   password           String
   role               Role           @default(USER)
   emailVerified      Boolean        @default(false)
-  termsAccepted      Boolean        @default(false) // Added this field
+  termsAccepted      Boolean        @default(false)
   organizations      Organization[] @relation("UserOrganizations") // Many-to-many relationship with Organization
   ownedOrganizations Organization[] @relation("OwnerOrganizations") // Organizations owned by this user
+  ownedTeams         Teams[]        @relation("OwnedTeams") // Teams owned by this user
+  teamMemberships    Teams[]        @relation("TeamUsers") // Many-to-many relationship with Teams
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
