@@ -1,16 +1,16 @@
 /**
- * File: 
+ * File:
  * Description:
  *
  * Developed by: Harish
  * Developed on: 29-11-2024
  *
- * Updated by: [Name] 
+ * Updated by: [Name]
  * Updated on: [Update date]
  * - Update description: Brief description of what was updated or fixed
  */
 
-import pkg from 'pg';
+import pkg from "pg";
 const { Pool } = pkg;
 
 async function fetchDatabaseDetails(pool) {
@@ -58,16 +58,30 @@ async function fetchDatabaseDetails(pool) {
 async function getTableData(req, res) {
   const { dbConfig, table, columns } = req.body;
 
-  const {username,host,database,password,port} = dbConfig;
+  const { username, host, database, password, port } = dbConfig;
 
-//   console.log("--> ",req.body);
-  const pool = new Pool({ user: username, host, database, password, port });
+  //   console.log("--> ",req.body);
+  const poolConfig = {
+    user: username,
+    host,
+    database,
+    password,
+    port,
+  };
+
+  // For production, enable SSL
+  if (process.env.NODE_ENV === "production") {
+    poolConfig.ssl = {
+      rejectUnauthorized: false, // Use this in non-production environments
+    };
+  }
+  const pool = new Pool(poolConfig);
 
   try {
     const cols = columns && columns.length ? columns.join(", ") : "*";
     const query = `SELECT ${cols} FROM ${table};`;
 
-    console.log("-->",pool);
+    console.log("-->", pool);
     const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (error) {
@@ -81,7 +95,23 @@ async function getTableData(req, res) {
 // Function to get database details
 async function getDatabaseDetails(req, res) {
   const { host, port, database, username, password } = req.body;
-  const pool = new Pool({ user: username, host, database, password, port });
+
+  //   console.log("--> ",req.body);
+  const poolConfig = {
+    user: username,
+    host,
+    database,
+    password,
+    port,
+  };
+
+  // For production, enable SSL
+  if (process.env.NODE_ENV === "production") {
+    poolConfig.ssl = {
+      rejectUnauthorized: false, // Use this in non-production environments
+    };
+  }
+  const pool = new Pool(poolConfig);
 
   try {
     const details = await fetchDatabaseDetails(pool);
@@ -94,15 +124,31 @@ async function getDatabaseDetails(req, res) {
 // Function to insert data into a table
 async function insertTableData(req, res) {
   const { dbConfig, table, columnData } = req.body;
-  const {username,host,database,password,port} = dbConfig;
+  const { username, host, database, password, port } = dbConfig;
 
-//   console.log("--> ",req.body);
-  const pool = new Pool({ user: username, host, database, password, port });
+  //   console.log("--> ",req.body);
+  const poolConfig = {
+    user: username,
+    host,
+    database,
+    password,
+    port,
+  };
+
+  // For production, enable SSL
+  if (process.env.NODE_ENV === "production") {
+    poolConfig.ssl = {
+      rejectUnauthorized: false, // Use this in non-production environments
+    };
+  }
+  const pool = new Pool(poolConfig);
 
   try {
     const cols = Object.keys(columnData).join(", ");
     const values = Object.values(columnData);
-    const query = `INSERT INTO ${table} (${cols}) VALUES (${values.map((_, i) => `$${i + 1}`).join(", ")}) RETURNING *;`;
+    const query = `INSERT INTO ${table} (${cols}) VALUES (${values
+      .map((_, i) => `$${i + 1}`)
+      .join(", ")}) RETURNING *;`;
     const result = await pool.query(query, values);
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -117,21 +163,39 @@ async function insertTableData(req, res) {
 async function joinTableData(req, res) {
   const { dbConfig, data } = req.body;
   const { joinType, primaryTable, tables, primaryColumn, columns } = data;
-  const {username,host,database,password,port} = dbConfig;
+  const { username, host, database, password, port } = dbConfig;
 
-//   console.log("--> ",req.body);
-  const pool = new Pool({ user: username, host, database, password, port });
+  //   console.log("--> ",req.body);
+  const poolConfig = {
+    user: username,
+    host,
+    database,
+    password,
+    port,
+  };
+
+  // For production, enable SSL
+  if (process.env.NODE_ENV === "production") {
+    poolConfig.ssl = {
+      rejectUnauthorized: false, // Use this in non-production environments
+    };
+  }
+  const pool = new Pool(poolConfig);
 
   try {
     const secondaryTable = tables.find((table) => table !== primaryTable);
-    const table1Cols = columns[primaryTable].map(col => `t1.${col}`).join(", ") || "*";
-    const table2Cols = columns[secondaryTable].map(col => `t2.${col}`).join(", ") || "*";
+    const table1Cols =
+      columns[primaryTable].map((col) => `t1.${col}`).join(", ") || "*";
+    const table2Cols =
+      columns[secondaryTable].map((col) => `t2.${col}`).join(", ") || "*";
 
     const query = `
       SELECT ${table1Cols}, ${table2Cols}
       FROM ${primaryTable} AS t1
       ${joinType.toUpperCase()} JOIN ${secondaryTable} AS t2
-      ON t1.${primaryColumn[primaryTable]} = t2.${primaryColumn[secondaryTable]};
+      ON t1.${primaryColumn[primaryTable]} = t2.${
+      primaryColumn[secondaryTable]
+    };
     `;
 
     const result = await pool.query(query);
@@ -146,4 +210,3 @@ async function joinTableData(req, res) {
 
 // Export all controller functions
 export { getTableData, getDatabaseDetails, insertTableData, joinTableData };
-
