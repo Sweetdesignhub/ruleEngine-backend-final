@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS
 const allowedOrigins = [
-  "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com"
+  "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com","https://beta.d3ndpxz9084dn8.amplifyapp.com"
 ];
 
 app.use(
