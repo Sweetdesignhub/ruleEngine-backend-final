@@ -21,14 +21,19 @@ import {
   createVersionByRuleId,
   updateVersionByVersionId,
   getAllVersionByRuleId,
-  deleteVersionById
+  deleteVersionById,
 } from "../controllers/rule.controller.js";
 
 import {
   getTableData,
   getDatabaseDetails,
+  // insertTableData,
+  joinTableData,
+  queryData,
+  updateTableData,
+  deleteTableData,
   insertTableData,
-  joinTableData
+  transformTableData
 } from "../controllers/database.controller.js";
 
 
@@ -49,7 +54,14 @@ router.delete("/rule/version/:id", deleteVersionById);
 
 router.post('/database/get/table/data', getTableData);
 router.post('/database/get/details', getDatabaseDetails);
-router.post('/database/table/insert', insertTableData);
+// router.post('/database/table/insert', insertTableData);
 router.post('/database/join/dbdata', joinTableData);
+router.post('/database/execute-query', queryData);
+router.post('/database/update/table/data', updateTableData);
+router.post('/database/delete/table/data', deleteTableData);
+router.post('/database/insert/table/data', insertTableData);
+router.post('/database/transform/table/data', transformTableData);
+
+
 
 export default router;
