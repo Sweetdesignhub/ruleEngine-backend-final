@@ -21,11 +21,18 @@ import bcrypt from "bcrypt";
 
 //register user
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role, termsAccepted } = req.body;
+  const { name, email, password, confirmPassword, role, termsAccepted } =
+    req.body;
 
   try {
     // 1. Validate input fields
-    if (!name || !email || !password || !confirmPassword || termsAccepted === undefined) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      termsAccepted === undefined
+    ) {
       return res.status(400).json({
         success: false,
         error: "All fields are required.",
@@ -89,7 +96,7 @@ export const registerUser = async (req, res) => {
     );
 
     // 8. Generate the email verification URL
-    const verificationUrl = `${process.env.DEV_BASE_URL}/verify-email?token=${emailVerificationToken}`;
+    const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${emailVerificationToken}`;
 
     // 9. Send verification email
     const emailHTML = `
@@ -182,7 +189,7 @@ export const signIn = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "strict",
-    }
+    };
 
     res.cookie("refreshToken", refreshToken, options);
     res.cookie("accessToken", accessToken, options);
