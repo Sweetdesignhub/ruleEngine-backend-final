@@ -89,7 +89,7 @@ export const registerUser = async (req, res) => {
     );
 
     // 8. Generate the email verification URL
-    const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${emailVerificationToken}`;
+    const verificationUrl = `${process.env.DEV_BASE_URL}/verify-email?token=${emailVerificationToken}`;
 
     // 9. Send verification email
     const emailHTML = `

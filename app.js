@@ -5,7 +5,7 @@
  * Developed by: Arshdeep Singh
  * Developed on: 27-11-2024
  *
- * Updated by: [Name] 
+ * Updated by: [Name]
  * Updated on: [Update date]
  * - Update description: Configured CORS to allow requests from the deployed frontend URL
  */
@@ -28,11 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS
 const allowedOrigins = [
-  // "http://localhost:5173", // Allow requests from your local frontend
-  "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com", // Uncomment this line if you want to allow production frontend
-  "https://beta.d3ndpxz9084dn8.amplifyapp.com"
+  "http://localhost:5173", // Allow requests from your local frontend
+  "https://beta.d68sn7l1f573h.amplifyapp.com/",
 ];
-
 
 app.use(
   cors({
