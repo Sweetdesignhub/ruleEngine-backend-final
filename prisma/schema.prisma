@@ -36,18 +36,16 @@ model Rule {
   versions       Version[]    @relation("RuleVersions") // One-to-many relationship with Version
 }
 
-
 model Version {
-  id        Int      @id @default(autoincrement())
-  versionName String  @default("1.0")  // Updated column name
-  data      Json                         // Added new column
-  flowInput Json?                        // Added new column
-  ruleId    Int
-  rule      Rule     @relation("RuleVersions", fields: [ruleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  versionName String   @default("1.0") // Updated column name
+  data        Json // Added new column
+  flowInput   Json? // Added new column
+  ruleId      Int
+  rule        Rule     @relation("RuleVersions", fields: [ruleId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
-
 
 model Teams {
   id             Int          @id @default(autoincrement())
@@ -72,11 +70,11 @@ model Organization {
   owner       User      @relation("OwnerOrganizations", fields: [ownerId], references: [id])
   users       User[]    @relation("UserOrganizations")
   teams       Teams[]
-  isDeleted   Boolean   @default(false) // Soft delete flag
-  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   rules       Rule[]    @relation("OrganizationRules")
+  deletedAt   DateTime? // For soft delete tracking
+  isDeleted   Boolean   @default(false) // Flag for soft delete
 }
 
 model User {

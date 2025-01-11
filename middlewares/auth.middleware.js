@@ -11,14 +11,19 @@
  */
 
 import { verifyToken } from "../utils/token.util.js";
-import prisma from "../prismaClient.js";
+import prisma from "../config/config.js";
 
 /**
  * Middleware to verify and authenticate the user.
  */
 export const authenticate = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
+    // Try to extract token from Authorization header first
+    const token = req.headers.authorization?.split(" ")[1] || req.cookies.accessToken;
+
+    console.log("Authorization Header:", req.headers.authorization);
+    console.log("Cookies:", req.cookies);
+    console.log("Extracted Token:", token);
 
     if (!token) {
       return res.status(401).json({ success: false, error: "Token is required." });
@@ -38,6 +43,7 @@ export const authenticate = async (req, res, next) => {
     return res.status(401).json({ success: false, error: error.message });
   }
 };
+
 
 /**
  * Middleware to check if the authenticated user is an admin.

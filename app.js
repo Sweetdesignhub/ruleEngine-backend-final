@@ -14,10 +14,12 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
+import cookieParser from 'cookie-parser';
 
 //routes
 import authRoutes from "./routes/auth.route.js";
 import ruleRoutes from "./routes/rule.route.js";
+import organizationRoutes from "./routes/organization.route.js";
 
 dotenv.config();
 
@@ -28,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS
 const allowedOrigins = [
-  // "http://localhost:5173", // Allow requests from your local frontend
+   "http://localhost:5173", // Allow requests from your local frontend
   "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com", // Uncomment this line if you want to allow production frontend
   "https://beta.d3ndpxz9084dn8.amplifyapp.com"
 ];
@@ -43,10 +45,24 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
+    methods: 'GET,POST,PUT,DELETE',
     credentials: true, // Allow cookies or other credentials
+    optionsSuccessStatus: 204,
+    allowedHeaders: 'Content-Type, Authorization',
   })
 );
+
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     methods: 'GET,POST,PUT,DELETE',
+//     credentials: true,
+//     optionsSuccessStatus: 204,
+//     allowedHeaders: 'Content-Type, Authorization',
+//   })
+// );
 app.use(morgan("dev"));
+app.use(cookieParser());
 
 // Default route
 app.get("/", (req, res) => {
@@ -55,5 +71,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/rules", ruleRoutes);
+app.use("/api/v1/organizations", organizationRoutes);
 
 export { app };

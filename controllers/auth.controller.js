@@ -21,11 +21,18 @@ import bcrypt from "bcrypt";
 
 //register user
 export const registerUser = async (req, res) => {
-  const { name, email, password, confirmPassword, role, termsAccepted } = req.body;
+  const { name, email, password, confirmPassword, role, termsAccepted } =
+    req.body;
 
   try {
     // 1. Validate input fields
-    if (!name || !email || !password || !confirmPassword || termsAccepted === undefined) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      termsAccepted === undefined
+    ) {
       return res.status(400).json({
         success: false,
         error: "All fields are required.",
@@ -89,7 +96,14 @@ export const registerUser = async (req, res) => {
     );
 
     // 8. Generate the email verification URL
-    const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${emailVerificationToken}`;
+    // Get the base URL based on the environment
+    const BASE_URL =
+      process.env.NODE_ENV === "development"
+        ? process.env.DEV_BASE_URL // Use DEV_BASE_URL for development
+        : process.env.PROD_BASE_URL; // Use PROD_BASE_URL for production
+
+    // Generate the verification URL
+    const verificationUrl = `${BASE_URL}/verify-email?token=${emailVerificationToken}`;
 
     // 9. Send verification email
     const emailHTML = `
@@ -177,15 +191,24 @@ export const signIn = async (req, res) => {
       password
     );
 
+    console.log("acc", accessToken);
+    console.log("ref", refreshToken);
+
+    
+
+    // Configure cookie options
     const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: "strict",
-    }
+      httpOnly: true,  // Can't be accessed via JavaScript
+      maxAge: 24 * 60 * 60 * 1000,  // 1 day
+      sameSite: 'None',  // Allow cross-site requests (required for cross-origin cookies)
+      path: '/',
+      secure: process.env.NODE_ENV === "production",  // Ensure cookies are sent over HTTPS
+    };
 
     res.cookie("refreshToken", refreshToken, options);
     res.cookie("accessToken", accessToken, options);
+
+    res.setHeader("Set-Cookie", [accessToken, refreshToken]);
 
     return res.status(200).json({
       success: true,
