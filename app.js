@@ -29,12 +29,13 @@ app.use(express.urlencoded({ extended: true }));
 // Configure CORS
 const allowedOrigins = [
   "http://localhost:5173", // Allow requests from your local frontend
-  "https://beta.d68sn7l1f573h.amplifyapp.com/",
+  "https://beta.d68sn7l1f573h.amplifyapp.com",
+  "https://beta.d3ipls58s1ybhm.amplifyapp.com",
 ];
 
 app.use(
   cors({
-    origin: "https://beta.d68sn7l1f573h.amplifyapp.com",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -42,6 +43,7 @@ app.use(
 );
 
 app.use(morgan("dev"));
+app.options("*", cors()); // Handle preflight OPTIONS requests
 
 // Default route
 app.get("/", (req, res) => {
