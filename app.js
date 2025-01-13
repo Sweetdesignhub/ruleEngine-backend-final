@@ -28,9 +28,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS
 const allowedOrigins = [
-  // "http://localhost:5173", // Allow requests from your local frontend
+  "http://localhost:5173", // Allow requests from your local frontend
   "https://feature-rule-management.d3ndpxz9084dn8.amplifyapp.com", // Uncomment this line if you want to allow production frontend
-  "https://beta.d3ndpxz9084dn8.amplifyapp.com"
+  "https://beta.d3ndpxz9084dn8.amplifyapp.com",
+  "https://beta.d68sn7l1f573h.amplifyapp.com",
 ];
 
 
