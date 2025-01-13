@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,11 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  USER
-  ADMIN
 }
 
 model Rule {
@@ -30,38 +19,36 @@ model Rule {
   activationDate DateTime     @default(now())
   category       String
   OrganizationId Int
-  organization   Organization @relation("OrganizationRules", fields: [OrganizationId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  versions       Version[]    @relation("RuleVersions") // One-to-many relationship with Version
+  organization   Organization @relation("OrganizationRules", fields: [OrganizationId], references: [id])
+  versions       Version[]    @relation("RuleVersions")
 }
-
 
 model Version {
-  id        Int      @id @default(autoincrement())
-  versionName String  @default("1.0")  // Updated column name
-  data      Json                         // Added new column
-  flowInput Json?                        // Added new column
-  ruleId    Int
-  rule      Rule     @relation("RuleVersions", fields: [ruleId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  ruleId      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  data        Json
+  flowInput   Json?
+  versionName String   @default("1.0")
+  rule        Rule     @relation("RuleVersions", fields: [ruleId], references: [id])
 }
-
 
 model Teams {
   id             Int          @id @default(autoincrement())
   name           String
   description    String
   organizationId Int
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  users          User[]       @relation("TeamUsers") // Many-to-many relationship
   ownerId        Int
-  owner          User         @relation("OwnedTeams", fields: [ownerId], references: [id]) // One-to-one relationship
-  deletedAt      DateTime? // New field to track deletion time
-  isDeleted      Boolean      @default(false) // Flag for soft delete
+  deletedAt      DateTime?
+  isDeleted      Boolean      @default(false)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  owner          User         @relation("OwnedTeams", fields: [ownerId], references: [id])
+  users          User[]       @relation("TeamUsers")
 }
 
 model Organization {
@@ -69,14 +56,14 @@ model Organization {
   name        String
   description String
   ownerId     Int
-  owner       User      @relation("OwnerOrganizations", fields: [ownerId], references: [id])
-  users       User[]    @relation("UserOrganizations")
-  teams       Teams[]
-  isDeleted   Boolean   @default(false) // Soft delete flag
-  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  isDeleted   Boolean   @default(false)
+  owner       User      @relation("OwnerOrganizations", fields: [ownerId], references: [id])
   rules       Rule[]    @relation("OrganizationRules")
+  teams       Teams[]
+  users       User[]    @relation("UserOrganizations")
 }
 
 model User {
@@ -86,11 +73,16 @@ model User {
   password           String
   role               Role           @default(USER)
   emailVerified      Boolean        @default(false)
-  termsAccepted      Boolean        @default(false)
-  organizations      Organization[] @relation("UserOrganizations") // Many-to-many relationship with Organization
-  ownedOrganizations Organization[] @relation("OwnerOrganizations") // Organizations owned by this user
-  ownedTeams         Teams[]        @relation("OwnedTeams") // Teams owned by this user
-  teamMemberships    Teams[]        @relation("TeamUsers") // Many-to-many relationship with Teams
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  termsAccepted      Boolean        @default(false)
+  ownedOrganizations Organization[] @relation("OwnerOrganizations")
+  ownedTeams         Teams[]        @relation("OwnedTeams")
+  teamMemberships    Teams[]        @relation("TeamUsers")
+  organizations      Organization[] @relation("UserOrganizations")
+}
+
+enum Role {
+  USER
+  ADMIN
 }
