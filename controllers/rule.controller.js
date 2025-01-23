@@ -19,7 +19,8 @@
 import { PrismaClient } from '@prisma/client';  // Make sure you have @prisma/client installed
 import vm from 'vm';
 const prisma = new PrismaClient();
-
+import fs from "fs";
+import path from 'path';
 
 // Error handling
 class ApiError extends Error {
@@ -1008,7 +1009,7 @@ export const updateSecretKeys = async (req, res) => {
   }
 };
 
-export const deleteSecretKeys = async(req, res) => {
+export const deleteSecretKeys = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -1030,5 +1031,136 @@ export const deleteSecretKeys = async(req, res) => {
   } catch (error) {
     console.error("Error deleting secret key:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+// DATASET CONTROLLERS
+
+// Upload a new dataset
+export const uploadDataset = async (req, res) => {
+  const { title } = req.body;
+  const file = req.file;
+
+  if (!title || (!file && !req.body.fileUrl)) {
+    return res.status(400).json({ error: "Title and file or file URL are required" });
+  }
+
+  try {
+    // Check for duplicate title
+    const existingDataset = await prisma.dataset.findUnique({ where: { title } });
+    if (existingDataset) {
+      return res.status(400).json({ error: "Dataset with this title already exists." });
+    }
+
+    const fileUrl = file ? path.join("uploads", file.filename) : req.body.fileUrl;
+
+    // Save dataset in the database
+    const dataset = await prisma.dataset.create({
+      data: { title, fileUrl },
+    });
+
+    return res.status(201).json({ message: "Dataset uploaded successfully", dataset });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to upload dataset" });
+  }
+};
+
+// Get all datasets
+export const getDatasets = async (req, res) => {
+  try {
+    const datasets = await prisma.dataset.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return res.status(200).json(datasets);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to fetch datasets" });
+  }
+};
+
+// Delete a dataset
+export const deleteDataset = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const dataset = await prisma.dataset.findUnique({ where: { id: parseInt(id) } });
+
+    if (!dataset) {
+      return res.status(404).json({ error: "Dataset not found" });
+    }
+
+    // Delete the dataset file from the server (if applicable)
+    if (fs.existsSync(dataset.fileUrl)) {
+      fs.unlinkSync(dataset.fileUrl);
+    }
+
+    // Delete from the database
+    await prisma.dataset.delete({ where: { id: parseInt(id) } });
+
+    return res.status(200).json({ message: "Dataset deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to delete dataset" });
+  }
+};
+
+// Update or re-upload a dataset
+export const updateDataset = async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
+  const file = req.file;
+
+  try {
+    const dataset = await prisma.dataset.findUnique({ where: { id: parseInt(id) } });
+
+    if (!dataset) {
+      return res.status(404).json({ error: "Dataset not found" });
+    }
+
+    const updatedData = { title };
+
+    if (file) {
+      // Delete the old file if it exists
+      if (fs.existsSync(dataset.fileUrl)) {
+        fs.unlinkSync(dataset.fileUrl);
+      }
+
+      // Update the file URL
+      updatedData.fileUrl = path.join("uploads", file.filename);
+    }
+
+    const updatedDataset = await prisma.dataset.update({
+      where: { id: parseInt(id) },
+      data: updatedData,
+    });
+
+    return res.status(200).json({ message: "Dataset updated successfully", updatedDataset });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Failed to update dataset" });
+  }
+};
+
+// Retrieve a dataset by title
+export const getDatasetByTitle = async (req, res) => {
+  const { title } = req.params;
+
+  try {
+    const dataset = await prisma.dataset.findUnique({
+      where: {
+        title,
+      },
+    });
+
+    if (!dataset) {
+      return res.status(404).json({ error: "Dataset not found" });
+    }
+
+    res.status(200).json(dataset);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to retrieve dataset" });
   }
 };

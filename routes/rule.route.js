@@ -33,6 +33,11 @@ import {
   createUpdateSecretKeys,
   updateSecretKeys,
   deleteSecretKeys,
+  uploadDataset,
+  getDatasets,
+  deleteDataset,
+  updateDataset,
+  getDatasetByTitle,
 } from "../controllers/rule.controller.js";
 
 import {
@@ -46,10 +51,11 @@ import {
   insertTableData,
   transformTableData
 } from "../controllers/database.controller.js";
-
+import multer from "multer";
 
 const router = Router();
 
+const upload = multer({ dest: "uploads/" });
 
 router.get("/rule/get/:orgId", getAllRuleByOrgId);
 router.post("/rule/create/:orgId", createRuleByOrgId);
@@ -96,5 +102,12 @@ router.post("/secret-key", createUpdateSecretKeys); // create/update secret key
 router.get("/secret-key/:userId", getSecretKeysWithUserId); // Route to fetch secret keys for a user
 router.put("/secret-key/:id", updateSecretKeys);
 router.delete("/secret-key/:id", deleteSecretKeys);
+
+// Dataset Routes
+router.post("/dataset", upload.single("file"), uploadDataset); // Upload a new dataset
+router.get("/dataset", getDatasets); // Get all datasets
+router.delete("/dataset/:id", deleteDataset); // Delete a dataset by ID
+router.put("/dataset/:id", upload.single("file"), updateDataset); // Update/re-upload a dataset
+router.get("/dataset/:title", getDatasetByTitle);
 
 export default router;

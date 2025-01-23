@@ -14,6 +14,8 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 
 //routes
 import authRoutes from "./routes/auth.route.js";
@@ -53,6 +55,11 @@ app.use(morgan("dev"));
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is up and running!" });
 });
+// Serve static files from the uploads directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/rules", ruleRoutes);

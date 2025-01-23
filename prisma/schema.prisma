@@ -148,3 +148,12 @@ model FlowFile {
 }
 
 
+
+
+model Dataset {
+  id           Int      @id @default(autoincrement())
+  title        String   @unique
+  fileUrl      String   // Stores file path or S3 bucket link
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
