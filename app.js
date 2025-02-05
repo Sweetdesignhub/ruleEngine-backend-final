@@ -20,7 +20,9 @@ import { fileURLToPath } from "url";
 //routes
 import authRoutes from "./routes/auth.route.js";
 import ruleRoutes from "./routes/rule.route.js";
-
+import orgRoutes from "./routes/organization.route.js";
+import teamRoutes from "./routes/teams.route.js";
+import userRoutes from "./routes/user.route.js";
 dotenv.config();
 
 const app = express();
@@ -60,8 +62,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
 
-
+app.use("/api/v1/org", orgRoutes);
+app.use("/api/v1/teams", teamRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/rules", ruleRoutes);
+app.use("/api/v1/users", userRoutes);
 
 export { app };

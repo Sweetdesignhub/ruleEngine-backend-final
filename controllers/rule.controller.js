@@ -21,6 +21,7 @@ import vm from 'vm';
 const prisma = new PrismaClient();
 import fs from "fs";
 import path from 'path';
+import Groq from "groq-sdk";
 
 // Error handling
 class ApiError extends Error {
@@ -1162,5 +1163,67 @@ export const getDatasetByTitle = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to retrieve dataset" });
+  }
+};
+
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY, // Store your API key in environment variables
+});
+
+export const getGrokResponse = async (req, res) => {
+  try {
+    const { generateDetails } = req.body;
+
+    const userPrompt = `
+      Given the following structured data:
+      
+      ${JSON.stringify(generateDetails, null, 2)}
+      
+      Analyze the provided details and determine the necessary regulatory compliance steps.
+      
+      Return the following structured response like:
+      
+      // Static data for Trigger, Validation, and Actions
+      
+      const trigger = [{ label: "TRIGGER_1", type: "trigger" }];
+      const validation = [
+          { label: "VALIDATION_1", type: "validation" },
+          { label: "VALIDATION_2", type: "validation" },
+      ];
+      const actions = [
+          { label: "ACTIONS_1", type: "action" },
+          { label: "ACTIONS_2", type: "action" },
+          { label: "ACTIONS_3", type: "action" },
+          { label: "ACTIONS_4", type: "action" },
+      ];
+      
+      Ensure the response is **only** in JavaScript code format.
+    `;
+
+    const response = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const rawText = response.choices[0]?.message?.content || "{}";
+    const extractedCode = rawText.match(/```javascript([\s\S]*?)```/)?.[1] || rawText;
+
+    let extractedData = {};
+    try {
+      extractedData = new Function(`"use strict"; ${extractedCode} return { trigger, validation, actions };`)();
+    } catch (error) {
+      console.error("Error evaluating Groq response:", error);
+    }
+
+    res.status(200).json(extractedData);
+  } catch (error) {
+    console.error("Error fetching response from Groq API:", error);
+    res.status(500).json({ error: "Failed to generate response" });
   }
 };

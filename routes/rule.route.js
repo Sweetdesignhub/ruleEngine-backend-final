@@ -38,6 +38,7 @@ import {
   deleteDataset,
   updateDataset,
   getDatasetByTitle,
+  getGrokResponse,
 } from "../controllers/rule.controller.js";
 
 import {
@@ -109,5 +110,5 @@ router.get("/dataset", getDatasets); // Get all datasets
 router.delete("/dataset/:id", deleteDataset); // Delete a dataset by ID
 router.put("/dataset/:id", upload.single("file"), updateDataset); // Update/re-upload a dataset
 router.get("/dataset/:title", getDatasetByTitle);
-
+router.post("/generate-response", getGrokResponse);
 export default router;

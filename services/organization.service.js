@@ -1,4 +1,4 @@
-import prisma from "../prismaClient.js";
+import { prisma } from "../db/prisma.js";
 
 /**
  * Create an organization
@@ -14,7 +14,7 @@ export const createOrganization = async (data) => {
  */
 export const updateOrganization = async (id, data) => {
   return prisma.organization.update({
-    where: { id },
+    where: { id: parseInt(id, 10) },
     data,
   });
 };
@@ -24,7 +24,7 @@ export const updateOrganization = async (id, data) => {
  */
 export const softDeleteOrganization = async (id) => {
   return prisma.organization.update({
-    where: { id },
+    where: { id: parseInt(id, 10) },
     data: {
       isDeleted: true,
       deletedAt: new Date(),
