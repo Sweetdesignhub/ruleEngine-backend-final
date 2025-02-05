@@ -5,7 +5,8 @@ import {
   restoreOrganization,
   softDeleteOrganization,
   updateOrganization,
-} from "../services/organization.service";
+} from "../services/organization.service.js";
+import { prisma } from "../db/prisma.js";
 
 /**
  * Create a new organization
@@ -13,6 +14,7 @@ import {
 export const createOrg = async (req, res, next) => {
   try {
     const { name, description } = req.body;
+    console.log(req.body);
     const data = {
       name,
       description,
@@ -104,3 +106,35 @@ export const getOrgById = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const getTeamsByOrganizationId = async (req, res) => {
+  const { orgId } = req.params; // Extract organization ID from request parameters
+
+  try {
+    // Fetch teams associated with the organization ID
+    const teams = await prisma.teams.findMany({
+      where: {
+        organizationId: parseInt(orgId), // Ensure orgId is an integer
+        isDeleted: false, // Exclude soft-deleted teams
+      },
+      include: {
+        users: true, // Include users associated with the team
+        owner: true, // Include the team owner details
+      },
+    });
+
+    // Return the teams as a response
+    res.status(200).json({
+      success: true,
+      data: teams,
+    });
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch teams",
+      error: error.message,
+    });
+  }
+}

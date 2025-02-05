@@ -11,7 +11,8 @@
  */
 
 import { verifyToken } from "../utils/token.util.js";
-import prisma from "../prismaClient.js";
+import { prisma } from "../db/prisma.js";
+// import prisma from "../config/config.js";
 
 /**
  * Middleware to verify and authenticate the user.
@@ -32,6 +33,7 @@ export const authenticate = async (req, res, next) => {
     }
 
     req.user = user; // Attach user to request object
+    // console.log("USER is:", user);
     next();
   } catch (error) {
     console.error("Authentication error:", error.message);
@@ -46,7 +48,7 @@ export const isAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ success: false, error: "User not authenticated." });
   }
-
+  // console.log(req.user.role);
   if (req.user.role !== "ADMIN") {
     return res.status(403).json({ success: false, error: "Access denied: Requires ADMIN privileges." });
   }
