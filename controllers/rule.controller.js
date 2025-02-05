@@ -626,7 +626,7 @@ export const createNodesAndEdges = async (req, res) => {
     const nodesResult = await Promise.all(nodePromises);
 
     // Update or create edges for this rule
-    const edgePromises = edges.map((edgeData) =>
+    const edgePromises = edges.map(({ type, ...edgeData }) =>
       prisma.edge.upsert({
         where: { id: edgeData.id },
         update: {
